@@ -1,0 +1,15 @@
+# Visual Studio Cache & Build Files
+.vs/
+x64/
+Debug/
+Release/
+*.db
+*.ipch
+
+# macOS System Files
+.DS_Store
+
+# Build Artifacts
+app
+*.o
+.cache/
