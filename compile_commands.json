@@ -1,0 +1,57 @@
+[
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c Main.cpp",
+    "file": "Main.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c glad.c",
+    "file": "glad.c"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c shaderClass.cpp",
+    "file": "shaderClass.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c VBO.cpp",
+    "file": "VBO.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c EBO.cpp",
+    "file": "EBO.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c VAO.cpp",
+    "file": "VAO.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c Primitives.cpp",
+    "file": "Primitives.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c Room.cpp",
+    "file": "Room.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c Furniture.cpp",
+    "file": "Furniture.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c Props.cpp",
+    "file": "Props.cpp"
+  },
+  {
+    "directory": "/Users/mehedihasan/Downloads/Project1",
+    "command": "clang++ -std=c++17 -I/Users/mehedihasan/Downloads/Project1/Libraries/include -I/opt/homebrew/include -I/usr/local/include -c ChatGPT.cpp",
+    "file": "ChatGPT.cpp"
+  }
+]

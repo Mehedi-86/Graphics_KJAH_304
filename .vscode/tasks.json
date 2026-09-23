@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Build OpenGL Project",
+      "command": "make",
+      "args": [],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "Build project using Makefile"
+    },
+    {
+      "type": "shell",
+      "label": "Run OpenGL Project",
+      "command": "./app",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "dependsOn": ["Build OpenGL Project"],
+      "detail": "Run compiled OpenGL application"
+    },
+    {
+      "type": "shell",
+      "label": "Clean OpenGL Project",
+      "command": "make clean",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "detail": "Remove compiled objects and binary"
+    }
+  ]
+}
