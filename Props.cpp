@@ -284,3 +284,140 @@ void drawTableware(const vec3 &pos, bool isVariant, GLuint modelLoc,
   gBase = scale(gBase, vec3(0.068f, 0.015f, 0.068f));
   drawCylinder(gBase, glassRimCol, modelLoc, colorLoc);
 }
+
+// 5. Table Fan with Complex Motion:
+// Detailed desk fan with weighted pedestal base, speed buttons, vertical stem,
+// oscillating motor head (swiveling case left-to-right), protective safety wire cage,
+// and high-speed spinning rotor blades ("arm" rotation) inside the case.
+void drawTableFan(const vec3 &pos, float baseRotationY, float oscillateAngle,
+                  float bladeAngle, GLuint modelLoc, GLuint colorLoc) {
+  vec3 baseDarkCol = vec3(0.16f, 0.17f, 0.19f);
+  vec3 baseAccentCol = vec3(0.25f, 0.27f, 0.30f);
+  vec3 stemCol = vec3(0.78f, 0.80f, 0.82f);
+  vec3 motorCol = vec3(0.18f, 0.20f, 0.22f);
+  vec3 cageCol = vec3(0.32f, 0.34f, 0.38f);
+  vec3 wireCol = vec3(0.65f, 0.68f, 0.72f);
+  vec3 ledCol = vec3(0.10f, 0.90f, 0.80f);
+
+  // Root transformation placed on the desk surface
+  mat4 root = translate(mat4(1.0f), pos);
+  root = rotate(root, radians(baseRotationY), vec3(0.0f, 1.0f, 0.0f));
+
+  // --- 1. BASE ASSEMBLY (Stays firmly seated on desk) ---
+  // Lower weighted pedestal disc
+  mat4 basePlate = root * translate(mat4(1.0f), vec3(0.0f, 0.012f, 0.0f));
+  basePlate = scale(basePlate, vec3(0.26f, 0.024f, 0.26f));
+  drawCylinder(basePlate, baseDarkCol, modelLoc, colorLoc);
+
+  // Upper beveled console tier
+  mat4 baseConsole = root * translate(mat4(1.0f), vec3(0.0f, 0.026f, 0.0f));
+  baseConsole = scale(baseConsole, vec3(0.22f, 0.018f, 0.22f));
+  drawCylinder(baseConsole, baseAccentCol, modelLoc, colorLoc);
+
+  // Push buttons on front of base console
+  for (int b = -1; b <= 1; b++) {
+    mat4 btn = root * translate(mat4(1.0f), vec3(b * 0.045f, 0.038f, 0.075f));
+    btn = scale(btn, vec3(0.022f, 0.014f, 0.022f));
+    drawCylinder(btn, stemCol, modelLoc, colorLoc);
+  }
+  // Power indicator LED
+  mat4 pwrLed = root * translate(mat4(1.0f), vec3(0.0f, 0.036f, 0.040f));
+  pwrLed = scale(pwrLed, vec3(0.014f, 0.010f, 0.014f));
+  drawSphere(pwrLed, ledCol, modelLoc, colorLoc);
+
+  // Slim vertical neck column
+  mat4 stem = root * translate(mat4(1.0f), vec3(0.0f, 0.21f, 0.0f));
+  stem = scale(stem, vec3(0.032f, 0.36f, 0.032f));
+  drawCylinder(stem, stemCol, modelLoc, colorLoc);
+
+  // Neck pivot hinge joint
+  mat4 neckJoint = root * translate(mat4(1.0f), vec3(0.0f, 0.40f, 0.0f));
+  neckJoint = scale(neckJoint, vec3(0.055f, 0.055f, 0.055f));
+  drawSphere(neckJoint, motorCol, modelLoc, colorLoc);
+
+  // Side tilt adjustment thumb screw on neck joint
+  mat4 thumbScrew = root * translate(mat4(1.0f), vec3(0.035f, 0.40f, 0.0f));
+  thumbScrew = rotate(thumbScrew, radians(90.0f), vec3(0.0f, 0.0f, 1.0f));
+  thumbScrew = scale(thumbScrew, vec3(0.020f, 0.025f, 0.020f));
+  drawCylinder(thumbScrew, stemCol, modelLoc, colorLoc);
+
+  // --- 2. OSCILLATING FAN HEAD & CASE (Left-to-right sweep) ---
+  mat4 head = root * translate(mat4(1.0f), vec3(0.0f, 0.41f, 0.0f));
+  head = rotate(head, radians(oscillateAngle), vec3(0.0f, 1.0f, 0.0f));
+
+  // Bullet-shaped rear motor housing
+  mat4 motorBody = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, -0.065f));
+  motorBody = scale(motorBody, vec3(0.12f, 0.12f, 0.15f));
+  drawSphere(motorBody, motorCol, modelLoc, colorLoc);
+
+  // Rear oscillation push-pull clutch knob
+  mat4 oscPin = head * translate(mat4(1.0f), vec3(0.0f, 0.075f, -0.09f));
+  oscPin = scale(oscPin, vec3(0.018f, 0.040f, 0.018f));
+  drawCylinder(oscPin, stemCol, modelLoc, colorLoc);
+
+  // Rear wire cage dish / rear spokes
+  for (int s = 0; s < 4; s++) {
+    mat4 rSpoke = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, -0.015f));
+    rSpoke = rotate(rSpoke, radians(s * 45.0f), vec3(0.0f, 0.0f, 1.0f));
+    rSpoke = scale(rSpoke, vec3(0.008f, 0.48f, 0.008f));
+    drawCube(rSpoke, wireCol, modelLoc, colorLoc);
+  }
+
+  // Circular protective outer cage rim (segmented polygonal wire ring - center is 100% hollow so blades are visible)
+  for (int r = 0; r < 12; r++) {
+    mat4 rimSeg = head * rotate(mat4(1.0f), radians(r * 30.0f), vec3(0.0f, 0.0f, 1.0f))
+                       * translate(mat4(1.0f), vec3(0.24f, 0.0f, 0.018f))
+                       * scale(mat4(1.0f), vec3(0.018f, 0.135f, 0.018f));
+    drawCube(rimSeg, cageCol, modelLoc, colorLoc);
+  }
+
+  // --- 3. HIGH-SPEED ROTATING ROTOR & PROPELLER BLADES ("ARM" ROTATION - 360 DEGREES) ---
+  // Rotor revolves smoothly around the motor shaft inside the safety cage
+  mat4 rotor = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.022f));
+  rotor = rotate(rotor, radians(bladeAngle), vec3(0.0f, 0.0f, 1.0f));
+
+  // Central bullet spinner nosecone
+  mat4 spinner = rotor * scale(mat4(1.0f), vec3(0.062f, 0.062f, 0.055f));
+  drawSphere(spinner, vec3(0.12f, 0.22f, 0.35f), modelLoc, colorLoc);
+
+  // 3 Wide Aerodynamic Propeller Blades ("Arms") with contrasting tip markings
+  for (int b = 0; b < 3; b++) {
+    mat4 bRot = rotate(rotor, radians(b * 120.0f), vec3(0.0f, 0.0f, 1.0f));
+
+    // Inner blade arm / stem connecting to hub
+    mat4 bladeArm = bRot * translate(mat4(1.0f), vec3(0.065f, 0.0f, 0.0f));
+    bladeArm = scale(bladeArm, vec3(0.06f, 0.024f, 0.014f));
+    drawCube(bladeArm, vec3(0.10f, 0.18f, 0.28f), modelLoc, colorLoc);
+
+    // Main propeller blade paddle (vibrant electric cyan)
+    mat4 bladeMain = bRot * translate(mat4(1.0f), vec3(0.135f, 0.0f, 0.0f));
+    bladeMain = rotate(bladeMain, radians(18.0f), vec3(1.0f, 0.0f, 0.0f));
+    bladeMain = scale(bladeMain, vec3(0.11f, 0.068f, 0.012f));
+    drawCube(bladeMain, vec3(0.05f, 0.78f, 0.98f), modelLoc, colorLoc);
+
+    // Contrasting blade tip marker (bright safety yellow so 360-degree rotation is visually striking)
+    mat4 bladeTip = bRot * translate(mat4(1.0f), vec3(0.20f, 0.005f, 0.0f));
+    bladeTip = rotate(bladeTip, radians(22.0f), vec3(1.0f, 0.0f, 0.0f));
+    bladeTip = scale(bladeTip, vec3(0.055f, 0.058f, 0.012f));
+    drawCube(bladeTip, vec3(1.0f, 0.86f, 0.12f), modelLoc, colorLoc);
+
+    // White aerodynamic stripe on blade face
+    mat4 bladeStripe = bRot * translate(mat4(1.0f), vec3(0.15f, 0.006f, 0.0f));
+    bladeStripe = rotate(bladeStripe, radians(18.0f), vec3(1.0f, 0.0f, 0.0f));
+    bladeStripe = scale(bladeStripe, vec3(0.025f, 0.064f, 0.014f));
+    drawCube(bladeStripe, vec3(0.98f, 0.98f, 0.98f), modelLoc, colorLoc);
+  }
+
+  // Front protective safety wire spokes (thin wire mesh in front of propeller)
+  for (int s = 0; s < 4; s++) {
+    mat4 fSpoke = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.040f));
+    fSpoke = rotate(fSpoke, radians(s * 45.0f), vec3(0.0f, 0.0f, 1.0f));
+    fSpoke = scale(fSpoke, vec3(0.006f, 0.48f, 0.006f));
+    drawCube(fSpoke, wireCol, modelLoc, colorLoc);
+  }
+
+  // Central emblem badge on front cage
+  mat4 centerBadge = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.045f));
+  centerBadge = scale(centerBadge, vec3(0.055f, 0.055f, 0.015f));
+  drawSphere(centerBadge, vec3(0.15f, 0.45f, 0.85f), modelLoc, colorLoc);
+}

@@ -5,41 +5,41 @@
 
 using namespace glm;
 
-// 1. Ceiling Fan: Completely stationary/static at all times.
-// Anchored securely to ceiling with canopy, rod, rounded motor hub, and 4
-// aerodynamic blades.
-void drawCeilingFan(const vec3 &pos, GLuint modelLoc, GLuint colorLoc) {
+// 1. Ceiling Fan: Anchored securely to ceiling with static canopy and downrod,
+// while motor body and 4 aerodynamic blades rotate smoothly.
+void drawCeilingFan(const vec3 &pos, float bladeAngle, GLuint modelLoc, GLuint colorLoc) {
   // Ceiling Mounting Canopy (spherical cap flush with ceiling at y = 3.50)
   mat4 canopy = translate(mat4(1.0f), pos + vec3(0.0f, 0.46f, 0.0f));
   canopy = scale(canopy, vec3(0.24f, 0.09f, 0.24f));
   drawSphere(canopy, vec3(0.88f, 0.86f, 0.82f), modelLoc, colorLoc);
 
-  // Vertical Connecting Downrod (cylinder)
+  // Vertical Connecting Downrod (cylinder stays stationary)
   mat4 rod = translate(mat4(1.0f), pos + vec3(0.0f, 0.27f, 0.0f));
   rod = scale(rod, vec3(0.038f, 0.38f, 0.038f));
   drawCylinder(rod, vec3(0.80f, 0.78f, 0.73f), modelLoc, colorLoc);
 
-  // --- STATIONARY ASSEMBLY (Static at all times, no rotation animation) ---
-  mat4 staticAssembly = translate(mat4(1.0f), pos);
+  // --- ROTATING MOTOR & BLADES ASSEMBLY ---
+  mat4 rotatingAssembly = translate(mat4(1.0f), pos);
+  rotatingAssembly = rotate(rotatingAssembly, radians(bladeAngle), vec3(0.0f, 1.0f, 0.0f));
 
   // Motor Top Collar (cylinder)
-  mat4 collar = translate(staticAssembly, vec3(0.0f, 0.06f, 0.0f));
+  mat4 collar = translate(rotatingAssembly, vec3(0.0f, 0.06f, 0.0f));
   collar = scale(collar, vec3(0.12f, 0.08f, 0.12f));
   drawCylinder(collar, vec3(0.82f, 0.80f, 0.75f), modelLoc, colorLoc);
 
   // Center Motor Body: realistic round casing using flattened sphere
-  mat4 motorBody = scale(staticAssembly, vec3(0.48f, 0.17f, 0.48f));
+  mat4 motorBody = scale(rotatingAssembly, vec3(0.48f, 0.17f, 0.48f));
   drawSphere(motorBody, vec3(0.92f, 0.90f, 0.84f), modelLoc, colorLoc);
 
   // Motor Bottom Accent Cap (flattened sphere)
-  mat4 botCap = translate(staticAssembly, vec3(0.0f, -0.07f, 0.0f));
+  mat4 botCap = translate(rotatingAssembly, vec3(0.0f, -0.07f, 0.0f));
   botCap = scale(botCap, vec3(0.22f, 0.05f, 0.22f));
   drawSphere(botCap, vec3(0.76f, 0.74f, 0.68f), modelLoc, colorLoc);
 
-  // 4 Aerodynamic Blades angled in 90-degree increments (Stationary)
+  // 4 Aerodynamic Blades angled in 90-degree increments
   for (int i = 0; i < 4; i++) {
     mat4 bladeBase =
-        rotate(staticAssembly, radians(i * 90.0f), vec3(0.0f, 1.0f, 0.0f));
+        rotate(rotatingAssembly, radians(i * 90.0f), vec3(0.0f, 1.0f, 0.0f));
 
     // Blade metallic mounting arm / bracket
     mat4 arm = translate(bladeBase, vec3(0.32f, 0.01f, 0.0f));
@@ -273,40 +273,60 @@ void drawStudyTable(const vec3 &pos, GLuint modelLoc, GLuint colorLoc) {
   }
 }
 
-// 6. Chair model
+// 6. Chair model:
+// Ergonomically proportioned sitting surface set clearly below the desk surface,
+// sturdy legs extending to the floor with structural cross-stretchers,
+// and full upright backrest with horizontal comfort slats.
 void drawChair(const vec3 &pos, GLuint modelLoc, GLuint colorLoc) {
-  // Metal legs
-  float cLegX[2] = {-0.3f, 0.3f};
-  float cLegZ[2] = {-0.3f, 0.3f};
+  vec3 metalCol = vec3(0.24f, 0.25f, 0.27f);
+  vec3 woodCol = vec3(0.65f, 0.38f, 0.18f);
+
+  // 4 Metal Legs extending down to floor level (floor at y = -2.45)
+  float cLegX[2] = {-0.30f, 0.30f};
+  float cLegZ[2] = {-0.30f, 0.30f};
   for (int lx = 0; lx < 2; lx++) {
     for (int lz = 0; lz < 2; lz++) {
       mat4 leg =
-          translate(mat4(1.0f), pos + vec3(cLegX[lx], -0.45f, cLegZ[lz]));
-      leg = scale(leg, vec3(0.08f, 0.8f, 0.08f));
-      drawCube(leg, vec3(0.25f, 0.25f, 0.25f), modelLoc, colorLoc);
+          translate(mat4(1.0f), pos + vec3(cLegX[lx], -0.37f, cLegZ[lz]));
+      leg = scale(leg, vec3(0.065f, 0.72f, 0.065f));
+      drawCube(leg, metalCol, modelLoc, colorLoc);
     }
   }
 
-  // Wooden Seat
+  // Cross stretchers / rungs connecting legs for structural stability
+  // Left and Right stretchers
+  for (int lx = 0; lx < 2; lx++) {
+    mat4 sideRung = translate(mat4(1.0f), pos + vec3(cLegX[lx], -0.48f, 0.0f));
+    sideRung = scale(sideRung, vec3(0.04f, 0.04f, 0.54f));
+    drawCube(sideRung, metalCol, modelLoc, colorLoc);
+  }
+  // Front and Back stretchers
+  for (int lz = 0; lz < 2; lz++) {
+    mat4 frontRung = translate(mat4(1.0f), pos + vec3(0.0f, -0.52f, cLegZ[lz]));
+    frontRung = scale(frontRung, vec3(0.54f, 0.04f, 0.04f));
+    drawCube(frontRung, metalCol, modelLoc, colorLoc);
+  }
+
+  // Wooden Seat (Sitting Plane)
   mat4 seat = translate(mat4(1.0f), pos);
-  seat = scale(seat, vec3(0.7f, 0.1f, 0.7f));
-  drawCube(seat, vec3(0.65f, 0.38f, 0.18f), modelLoc, colorLoc);
+  seat = scale(seat, vec3(0.72f, 0.08f, 0.72f));
+  drawCube(seat, woodCol, modelLoc, colorLoc);
 
-  // Backrest uprights
-  mat4 up1 = translate(mat4(1.0f), pos + vec3(-0.3f, 0.3f, -0.3f));
-  up1 = scale(up1, vec3(0.06f, 0.5f, 0.06f));
-  drawCube(up1, vec3(0.25f, 0.25f, 0.25f), modelLoc, colorLoc);
+  // Backrest upright posts
+  mat4 up1 = translate(mat4(1.0f), pos + vec3(-0.30f, 0.38f, -0.30f));
+  up1 = scale(up1, vec3(0.055f, 0.72f, 0.055f));
+  drawCube(up1, metalCol, modelLoc, colorLoc);
 
-  mat4 up2 = translate(mat4(1.0f), pos + vec3(0.3f, 0.3f, -0.3f));
-  up2 = scale(up2, vec3(0.06f, 0.5f, 0.06f));
-  drawCube(up2, vec3(0.25f, 0.25f, 0.25f), modelLoc, colorLoc);
+  mat4 up2 = translate(mat4(1.0f), pos + vec3(0.30f, 0.38f, -0.30f));
+  up2 = scale(up2, vec3(0.055f, 0.72f, 0.055f));
+  drawCube(up2, metalCol, modelLoc, colorLoc);
 
-  // Horizontal slats
+  // 4 Horizontal wooden comfort slats
   for (int s = 0; s < 4; s++) {
     mat4 slat =
-        translate(mat4(1.0f), pos + vec3(0.0f, 0.15f + s * 0.15f, -0.3f));
-    slat = scale(slat, vec3(0.65f, 0.08f, 0.08f));
-    drawCube(slat, vec3(0.65f, 0.38f, 0.18f), modelLoc, colorLoc);
+        translate(mat4(1.0f), pos + vec3(0.0f, 0.20f + s * 0.14f, -0.30f));
+    slat = scale(slat, vec3(0.66f, 0.08f, 0.045f));
+    drawCube(slat, woodCol, modelLoc, colorLoc);
   }
 }
 

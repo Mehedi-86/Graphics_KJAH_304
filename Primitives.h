@@ -8,11 +8,17 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-// Initialize all primitive meshes (Cube, Sphere, Cylinder)
+// Initialize all primitive meshes (Cube, Sphere, Cylinder) with vertex normals
 void initPrimitives();
 
 // Free OpenGL buffer resources allocated for primitive meshes
 void cleanupPrimitives();
+
+// Set uniform location for isEmissive
+void setEmissiveUniformLoc(GLint loc);
+
+// Enable or disable self-illumination (emissive mode for sun, sky, lamps)
+void setEmissive(bool emissive);
 
 // General draw helper
 void drawMesh(GLuint vao, GLsizei count, const glm::mat4 &model,

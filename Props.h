@@ -24,4 +24,9 @@ void drawTrolleyBag(const glm::vec3 &pos, const glm::vec3 &shellColor,
 void drawTableware(const glm::vec3 &pos, bool isVariant, GLuint modelLoc,
                    GLuint colorLoc);
 
+// 5. Table Fan with complex motion: base, stand, oscillating case/cage (left to right),
+// and rotating fan blades/arm around rotor axis
+void drawTableFan(const glm::vec3 &pos, float baseRotationY, float oscillateAngle,
+                  float bladeAngle, GLuint modelLoc, GLuint colorLoc);
+
 #endif // PROPS_H
