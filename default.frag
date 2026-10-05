@@ -3,6 +3,10 @@ out vec4 FragColor;
 
 in vec3 FragPos;
 in vec3 Normal;
+in vec3 GouraudColor;
+
+// Shading mode: 0 = Phong Shading (Per-pixel), 1 = Gouraud Shading (Per-vertex)
+uniform int useGouraud;
 
 // Surface material properties
 uniform vec3 objectColor;
@@ -32,7 +36,7 @@ struct PointLight {
     float linear;
     float quadratic;
 };
-#define NR_POINT_LIGHTS 5
+#define NR_POINT_LIGHTS 6
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 // ============================================================
@@ -91,6 +95,13 @@ void main()
         return;
     }
 
+    // Gouraud Shading: Output linearly-interpolated per-vertex lighting color
+    if (useGouraud == 1) {
+        FragColor = vec4(GouraudColor, 1.0);
+        return;
+    }
+
+    // Phong Shading: Per-fragment normal interpolation and manual lighting computation
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 

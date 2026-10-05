@@ -4,7 +4,7 @@ CFLAGS = -Wall -DGL_SILENCE_DEPRECATION -I./Libraries/include -I/opt/homebrew/in
 CXXFLAGS = -std=c++17 -Wall -DGL_SILENCE_DEPRECATION -I./Libraries/include -I/opt/homebrew/include -I/usr/local/include
 LDFLAGS = -L/opt/homebrew/lib -L/usr/local/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 
-OBJS = Main.o glad.o shaderClass.o VBO.o EBO.o VAO.o Primitives.o Room.o Furniture.o Props.o
+OBJS = Main.o glad.o shaderClass.o VBO.o EBO.o VAO.o Primitives.o Fixtures.o Balcony.o Corridor.o Room.o Furniture.o Props.o
 TARGET = app
 
 all: $(TARGET)

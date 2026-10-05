@@ -65,63 +65,66 @@ void drawAlmirah(const vec3 &pos, bool isWood, GLuint modelLoc,
   vec3 handleCol =
       isWood ? vec3(0.85f, 0.72f, 0.35f) : vec3(0.88f, 0.88f, 0.92f);
 
-  float totalH = 4.5f;
-  float width = 1.35f;
-  float depth = 1.55f;
+  float floorY = -2.45f;
+  float totalH = 4.80f; // Tall, substantial collegiate double-door wardrobe
+  float width = 1.42f;  // Restored wide, realistic almirah width
+  float depth = 0.90f;  // Solid, deep almirah depth
 
-  // Recessed Base / Stand at the bottom
-  mat4 base =
-      translate(mat4(1.0f), pos + vec3(0.0f, -totalH * 0.5f + 0.15f, 0.0f));
-  base = scale(base, vec3(width * 0.92f, 0.30f, depth * 0.92f));
+  // 1. Solid Base Plinth resting firmly and squarely on the floor
+  float baseH = 0.32f;
+  mat4 base = translate(mat4(1.0f), vec3(pos.x, floorY + baseH * 0.5f, pos.z));
+  base = scale(base, vec3(width * 0.94f, baseH, depth * 0.94f));
   drawCube(base, trimCol, modelLoc, colorLoc);
 
-  // Main Outer Cabinet Shell
-  mat4 shell = translate(mat4(1.0f), pos + vec3(0.0f, 0.08f, 0.0f));
-  shell = scale(shell, vec3(width, totalH - 0.50f, depth));
+  // 2. Main Outer Cabinet Shell resting directly on the base
+  float shellH = totalH - baseH - 0.16f;
+  float shellCenterY = floorY + baseH + shellH * 0.5f;
+  mat4 shell = translate(mat4(1.0f), vec3(pos.x, shellCenterY, pos.z));
+  shell = scale(shell, vec3(width, shellH, depth));
   drawCube(shell, bodyCol, modelLoc, colorLoc);
 
-  // Slightly Extruded Top Cornice (Molding ledge)
-  mat4 cornice =
-      translate(mat4(1.0f), pos + vec3(0.0f, totalH * 0.5f - 0.08f, 0.0f));
-  cornice = scale(cornice, vec3(width * 1.08f, 0.16f, depth * 1.08f));
+  // 3. Extruded Top Cornice Molding at the top
+  float corniceH = 0.18f;
+  float corniceCenterY = floorY + totalH - corniceH * 0.5f;
+  mat4 cornice = translate(mat4(1.0f), vec3(pos.x, corniceCenterY, pos.z));
+  cornice = scale(cornice, vec3(width * 1.07f, corniceH, depth * 1.07f));
   drawCube(cornice, trimCol, modelLoc, colorLoc);
 
-  // 2 Distinct Front Door Panels with subtle vertical slit
+  // 4. 2 Distinct Front Door Panels with subtle vertical slit
   float doorW = (width * 0.94f - 0.03f) * 0.5f;
-  float doorH = totalH - 0.74f;
+  float doorH = shellH - 0.10f;
   float doorD = 0.035f;
-  float doorZ = depth * 0.5f + 0.015f;
+  float doorZ = pos.z + depth * 0.5f + 0.015f;
+  float doorCenterY = shellCenterY;
 
-  float doorX[2] = {-(doorW * 0.5f + 0.015f), (doorW * 0.5f + 0.015f)};
+  float doorX[2] = {pos.x - (doorW * 0.5f + 0.015f), pos.x + (doorW * 0.5f + 0.015f)};
   for (int d = 0; d < 2; d++) {
     // Door face
-    mat4 door = translate(mat4(1.0f), pos + vec3(doorX[d], 0.05f, doorZ));
+    mat4 door = translate(mat4(1.0f), vec3(doorX[d], doorCenterY, doorZ));
     mat4 doorFace = scale(door, vec3(doorW, doorH, doorD));
     drawCube(doorFace, panelCol, modelLoc, colorLoc);
 
     // Inset decorative recessed panel frame
     mat4 inset = translate(door, vec3(0.0f, 0.0f, 0.015f));
-    inset = scale(inset, vec3(doorW * 0.78f, doorH * 0.82f, 0.02f));
+    inset = scale(inset, vec3(doorW * 0.80f, doorH * 0.84f, 0.02f));
     drawCube(inset, bodyCol * 0.88f, modelLoc, colorLoc);
   }
 
-  // Two Small Metallic Vertical Door Handles
-  float handleX[2] = {-0.065f, 0.065f};
+  // 5. Two Metallic Vertical Door Handles
+  float handleX[2] = {pos.x - 0.075f, pos.x + 0.075f};
+  float handleCenterY = doorCenterY + 0.05f;
   for (int h = 0; h < 2; h++) {
     // Vertical grip bar
-    mat4 bar =
-        translate(mat4(1.0f), pos + vec3(handleX[h], 0.10f, doorZ + 0.05f));
-    bar = scale(bar, vec3(0.025f, 0.35f, 0.025f));
+    mat4 bar = translate(mat4(1.0f), vec3(handleX[h], handleCenterY, doorZ + 0.05f));
+    bar = scale(bar, vec3(0.025f, 0.40f, 0.025f));
     drawCube(bar, handleCol, modelLoc, colorLoc);
 
     // Upper & lower standoffs
-    mat4 topStandoff =
-        translate(mat4(1.0f), pos + vec3(handleX[h], 0.24f, doorZ + 0.025f));
+    mat4 topStandoff = translate(mat4(1.0f), vec3(handleX[h], handleCenterY + 0.15f, doorZ + 0.025f));
     topStandoff = scale(topStandoff, vec3(0.02f, 0.02f, 0.04f));
     drawCube(topStandoff, handleCol, modelLoc, colorLoc);
 
-    mat4 botStandoff =
-        translate(mat4(1.0f), pos + vec3(handleX[h], -0.04f, doorZ + 0.025f));
+    mat4 botStandoff = translate(mat4(1.0f), vec3(handleX[h], handleCenterY - 0.15f, doorZ + 0.025f));
     botStandoff = scale(botStandoff, vec3(0.02f, 0.02f, 0.04f));
     drawCube(botStandoff, handleCol, modelLoc, colorLoc);
   }

@@ -1,25 +1,25 @@
 #version 330 core
+// =======================================================================
+// GOURAUD VERTEX SHADER (Per-Vertex Illumination Model)
+// All ambient, diffuse, and specular lighting calculations are evaluated
+// at every vertex, and the resulting color is passed down to be linearly
+// interpolated across fragments during hardware rasterization.
+// =======================================================================
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 
-out vec3 FragPos;
-out vec3 Normal;
 out vec3 GouraudColor;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-// Shading mode: 0 = Phong Shading (Per-pixel), 1 = Gouraud Shading (Per-vertex)
-uniform int useGouraud;
-
-// Material properties
 uniform vec3 objectColor;
 uniform float shininess;
 uniform float specularStrength;
 uniform vec3 viewPos;
+uniform int isEmissive;
 
-// Directional Light (Sunlight)
 struct DirLight {
     vec3 direction;
     vec3 ambient;
@@ -28,7 +28,6 @@ struct DirLight {
 };
 uniform DirLight dirLight;
 
-// Point Lights (4 Room Lights + 1 Balcony Light)
 struct PointLight {
     vec3 position;
     vec3 ambient;
@@ -38,7 +37,7 @@ struct PointLight {
     float linear;
     float quadratic;
 };
-#define NR_POINT_LIGHTS 6
+#define NR_POINT_LIGHTS 5
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 vec3 CalcGouraudDir(DirLight light, vec3 normal, vec3 viewDir) {
@@ -67,25 +66,19 @@ vec3 CalcGouraudPoint(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 void main()
 {
-    // Compute world-space vertex position
-    FragPos = vec3(model * vec4(aPos, 1.0));
+    vec3 fragPos = vec3(model * vec4(aPos, 1.0));
+    vec3 normal = normalize(mat3(transpose(inverse(model))) * aNormal);
+    vec3 viewDir = normalize(viewPos - fragPos);
 
-    // Transform vertex normal to world space using normal matrix
-    Normal = mat3(transpose(inverse(model))) * aNormal;
-
-    gl_Position = proj * view * vec4(FragPos, 1.0);
-
-    // Compute per-vertex lighting if Gouraud shading is selected
-    if (useGouraud == 1) {
-        vec3 norm = normalize(Normal);
-        vec3 viewDir = normalize(viewPos - FragPos);
-
-        vec3 result = CalcGouraudDir(dirLight, norm, viewDir);
+    if (isEmissive == 1) {
+        GouraudColor = objectColor;
+    } else {
+        vec3 result = CalcGouraudDir(dirLight, normal, viewDir);
         for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-            result += CalcGouraudPoint(pointLights[i], norm, FragPos, viewDir);
+            result += CalcGouraudPoint(pointLights[i], normal, fragPos, viewDir);
         }
         GouraudColor = result;
-    } else {
-        GouraudColor = vec3(0.0);
     }
+
+    gl_Position = proj * view * vec4(fragPos, 1.0);
 }

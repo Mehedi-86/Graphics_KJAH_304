@@ -37,14 +37,19 @@ void drawComputer(const vec3 &pos, float rotationY, GLuint modelLoc,
   drawCube(bezel, vec3(0.12f, 0.12f, 0.13f), modelLoc, colorLoc);
 
   // 5. Recessed active LCD screen display (pointing toward +Z in local space)
+  // Set emissive so screen glows brightly even when room lights are switched off
   mat4 screen = root * translate(mat4(1.0f), vec3(0.0f, 0.49f, -0.068f)) *
                 scale(mat4(1.0f), vec3(0.92f, 0.52f, 0.006f));
-  drawCube(screen, vec3(0.16f, 0.42f, 0.64f), modelLoc, colorLoc);
+  setEmissive(true);
+  drawCube(screen, vec3(0.24f, 0.65f, 0.95f), modelLoc, colorLoc);
+  setEmissive(false);
 
-  // 6. Monitor power LED at bottom-right bezel
+  // 6. Monitor power LED at bottom-right bezel (emissive green)
   mat4 monLed = root * translate(mat4(1.0f), vec3(0.42f, 0.205f, -0.066f)) *
                 scale(mat4(1.0f), vec3(0.018f, 0.012f, 0.004f));
-  drawCube(monLed, vec3(0.20f, 0.90f, 0.70f), modelLoc, colorLoc);
+  setEmissive(true);
+  drawCube(monLed, vec3(0.20f, 0.95f, 0.50f), modelLoc, colorLoc);
+  setEmissive(false);
 
   // 7. Separate keyboard plate directly centered in front of the monitor bezel,
   // space and between the screen base and chair edge (at local +Z = 0.22f)
@@ -77,10 +82,12 @@ void drawComputer(const vec3 &pos, float rotationY, GLuint modelLoc,
                   scale(mat4(1.0f), vec3(0.26f, 0.58f, 0.02f));
   drawCube(cpuFront, vec3(0.22f, 0.22f, 0.25f), modelLoc, colorLoc);
 
-  // Power button / LED accent strip (pointing toward +Z in local space)
+  // Power button / LED accent strip (pointing toward +Z in local space, emissive cyan)
   mat4 cpuLed = root * translate(mat4(1.0f), vec3(0.70f, 0.52f, 0.227f)) *
                 scale(mat4(1.0f), vec3(0.06f, 0.015f, 0.006f));
-  drawCube(cpuLed, vec3(0.20f, 0.70f, 0.95f), modelLoc, colorLoc);
+  setEmissive(true);
+  drawCube(cpuLed, vec3(0.10f, 0.85f, 1.0f), modelLoc, colorLoc);
+  setEmissive(false);
 
   // Front intake ventilation grille (pointing toward +Z in local space)
   mat4 cpuGrille = root * translate(mat4(1.0f), vec3(0.70f, 0.22f, 0.227f)) *
@@ -420,4 +427,223 @@ void drawTableFan(const vec3 &pos, float baseRotationY, float oscillateAngle,
   mat4 centerBadge = head * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.045f));
   centerBadge = scale(centerBadge, vec3(0.055f, 0.055f, 0.015f));
   drawSphere(centerBadge, vec3(0.15f, 0.45f, 0.85f), modelLoc, colorLoc);
+}
+
+// 6. Wall Cloth Hanger:
+// Horizontal wooden mounting plate on wall, metal hooks, triangular hanger frame,
+// and neatly hung draped clothing/shirt with varied natural fabric colors.
+void drawClothHanger(const vec3 &pos, float rotationY, GLuint modelLoc,
+                     GLuint colorLoc, int clothVariant) {
+  mat4 root = translate(mat4(1.0f), pos);
+  root = rotate(root, radians(rotationY), vec3(0.0f, 1.0f, 0.0f));
+
+  // 1. Horizontal wall-mounted backplate (Rich polished mahogany wood)
+  // Positioned proud of the wall face (local Z > 0) to completely eliminate Z-fighting
+  mat4 plateBase = root * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.018f)) *
+                   scale(mat4(1.0f), vec3(0.60f, 0.12f, 0.032f));
+  drawCube(plateBase, vec3(0.36f, 0.20f, 0.10f), modelLoc, colorLoc);
+
+  // Beveled outer edge trim on backplate
+  mat4 plateTrim = root * translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.024f)) *
+                   scale(mat4(1.0f), vec3(0.56f, 0.09f, 0.025f));
+  drawCube(plateTrim, vec3(0.44f, 0.25f, 0.12f), modelLoc, colorLoc);
+
+  // 2. Three metal hook pegs protruding forward from the plate
+  float pegX[3] = {-0.19f, 0.0f, 0.19f};
+  vec3 metalCol = vec3(0.80f, 0.80f, 0.82f);
+  vec3 brassCol = vec3(0.85f, 0.72f, 0.32f);
+
+  for (int i = 0; i < 3; i++) {
+    // Mounting base rosette on plate face
+    mat4 pegRosette = root * translate(mat4(1.0f), vec3(pegX[i], 0.0f, 0.036f)) *
+                      scale(mat4(1.0f), vec3(0.045f, 0.045f, 0.010f));
+    drawCube(pegRosette, brassCol, modelLoc, colorLoc);
+
+    // Forward projecting peg shaft
+    mat4 peg = root * translate(mat4(1.0f), vec3(pegX[i], 0.0f, 0.075f)) *
+               scale(mat4(1.0f), vec3(0.022f, 0.022f, 0.070f));
+    drawCube(peg, metalCol, modelLoc, colorLoc);
+
+    // Upward curled hook tip
+    mat4 lip = root * translate(mat4(1.0f), vec3(pegX[i], 0.030f, 0.105f)) *
+               scale(mat4(1.0f), vec3(0.022f, 0.045f, 0.018f));
+    drawCube(lip, metalCol, modelLoc, colorLoc);
+
+    // Hook tip sphere cap
+    mat4 cap = root * translate(mat4(1.0f), vec3(pegX[i], 0.052f, 0.105f)) *
+               scale(mat4(1.0f), vec3(0.026f, 0.026f, 0.026f));
+    drawSphere(cap, brassCol, modelLoc, colorLoc);
+  }
+
+  // 3. Triangular coat hanger hanging from the center peg hook (pegX[1] = 0.0f)
+  float hangerZ = 0.105f;
+
+  // Swivel hook neck looped over the peg
+  mat4 hHook = root * translate(mat4(1.0f), vec3(0.0f, -0.015f, hangerZ)) *
+               scale(mat4(1.0f), vec3(0.016f, 0.090f, 0.016f));
+  drawCube(hHook, metalCol, modelLoc, colorLoc);
+
+  // Triangular wooden hanger shoulders:
+  vec3 hangerWood = vec3(0.58f, 0.35f, 0.18f);
+
+  // Left angled hanger arm (+22 deg)
+  mat4 lArm = root * translate(mat4(1.0f), vec3(-0.12f, -0.09f, hangerZ));
+  lArm = rotate(lArm, radians(22.0f), vec3(0.0f, 0.0f, 1.0f));
+  lArm = scale(lArm, vec3(0.26f, 0.024f, 0.022f));
+  drawCube(lArm, hangerWood, modelLoc, colorLoc);
+
+  // Right angled hanger arm (-22 deg)
+  mat4 rArm = root * translate(mat4(1.0f), vec3(0.12f, -0.09f, hangerZ));
+  rArm = rotate(rArm, radians(-22.0f), vec3(0.0f, 0.0f, 1.0f));
+  rArm = scale(rArm, vec3(0.26f, 0.024f, 0.022f));
+  drawCube(rArm, hangerWood, modelLoc, colorLoc);
+
+  // Bottom horizontal trouser crossbar
+  mat4 bBar = root * translate(mat4(1.0f), vec3(0.0f, -0.155f, hangerZ)) *
+              scale(mat4(1.0f), vec3(0.46f, 0.018f, 0.018f));
+  drawCube(bBar, hangerWood, modelLoc, colorLoc);
+
+  // 4. Natural draped shirt / polo hanging smoothly over the hanger
+  vec3 clothColors[4] = {
+      vec3(0.16f, 0.36f, 0.65f), // Classic Hall Blue polo
+      vec3(0.68f, 0.16f, 0.18f), // Crimson Maroon polo
+      vec3(0.14f, 0.45f, 0.34f), // Emerald Teal polo
+      vec3(0.90f, 0.90f, 0.86f)  // Crisp Off-White shirt
+  };
+  vec3 chosenColor = clothColors[clothVariant % 4];
+
+  // Contoured left shoulder draped over the left hanger arm
+  mat4 lShoulder = root * translate(mat4(1.0f), vec3(-0.13f, -0.09f, hangerZ));
+  lShoulder = rotate(lShoulder, radians(22.0f), vec3(0.0f, 0.0f, 1.0f));
+  lShoulder = scale(lShoulder, vec3(0.26f, 0.038f, 0.042f));
+  drawCube(lShoulder, chosenColor * 0.95f, modelLoc, colorLoc);
+
+  // Contoured right shoulder draped over the right hanger arm
+  mat4 rShoulder = root * translate(mat4(1.0f), vec3(0.13f, -0.09f, hangerZ));
+  rShoulder = rotate(rShoulder, radians(-22.0f), vec3(0.0f, 0.0f, 1.0f));
+  rShoulder = scale(rShoulder, vec3(0.26f, 0.038f, 0.042f));
+  drawCube(rShoulder, chosenColor * 0.95f, modelLoc, colorLoc);
+
+  // Folded polo / shirt collar around the neckline
+  mat4 collarBack = root * translate(mat4(1.0f), vec3(0.0f, -0.055f, hangerZ - 0.010f)) *
+                    scale(mat4(1.0f), vec3(0.14f, 0.042f, 0.032f));
+  drawCube(collarBack, chosenColor * 0.88f, modelLoc, colorLoc);
+
+  // Left collar lapel
+  mat4 lLapel = root * translate(mat4(1.0f), vec3(-0.06f, -0.075f, hangerZ + 0.020f));
+  lLapel = rotate(lLapel, radians(25.0f), vec3(0.0f, 0.0f, 1.0f));
+  lLapel = scale(lLapel, vec3(0.075f, 0.045f, 0.016f));
+  drawCube(lLapel, chosenColor * 0.84f, modelLoc, colorLoc);
+
+  // Right collar lapel
+  mat4 rLapel = root * translate(mat4(1.0f), vec3(0.06f, -0.075f, hangerZ + 0.020f));
+  rLapel = rotate(rLapel, radians(-25.0f), vec3(0.0f, 0.0f, 1.0f));
+  rLapel = scale(rLapel, vec3(0.075f, 0.045f, 0.016f));
+  drawCube(rLapel, chosenColor * 0.84f, modelLoc, colorLoc);
+
+  // Main shirt chest and body draping down smoothly
+  mat4 shirtBody = root * translate(mat4(1.0f), vec3(0.0f, -0.42f, hangerZ)) *
+                   scale(mat4(1.0f), vec3(0.44f, 0.54f, 0.038f));
+  drawCube(shirtBody, chosenColor, modelLoc, colorLoc);
+
+  // Front button placket strip
+  mat4 placket = root * translate(mat4(1.0f), vec3(0.0f, -0.30f, hangerZ + 0.021f)) *
+                 scale(mat4(1.0f), vec3(0.040f, 0.32f, 0.008f));
+  drawCube(placket, chosenColor * 0.90f, modelLoc, colorLoc);
+
+  // Two small buttons on placket
+  mat4 btn1 = root * translate(mat4(1.0f), vec3(0.0f, -0.22f, hangerZ + 0.026f)) *
+              scale(mat4(1.0f), vec3(0.014f, 0.014f, 0.006f));
+  drawCube(btn1, vec3(0.95f, 0.95f, 0.95f), modelLoc, colorLoc);
+
+  mat4 btn2 = root * translate(mat4(1.0f), vec3(0.0f, -0.32f, hangerZ + 0.026f)) *
+              scale(mat4(1.0f), vec3(0.014f, 0.014f, 0.006f));
+  drawCube(btn2, vec3(0.95f, 0.95f, 0.95f), modelLoc, colorLoc);
+
+  // Left sleeve hanging naturally
+  mat4 lSleeve = root * translate(mat4(1.0f), vec3(-0.24f, -0.28f, hangerZ)) *
+                 scale(mat4(1.0f), vec3(0.080f, 0.30f, 0.035f));
+  drawCube(lSleeve, chosenColor * 0.92f, modelLoc, colorLoc);
+
+  // Right sleeve hanging naturally
+  mat4 rSleeve = root * translate(mat4(1.0f), vec3(0.24f, -0.28f, hangerZ)) *
+                 scale(mat4(1.0f), vec3(0.080f, 0.30f, 0.035f));
+  drawCube(rSleeve, chosenColor * 0.92f, modelLoc, colorLoc);
+}
+
+// 7. Umbrella & Stand:
+// Sleek cylindrical canister stand on the floor holding a standing umbrella
+// with metallic shaft, curved J-handle, folded tapered fabric canopy and ferrule.
+void drawUmbrella(const vec3 &pos, GLuint modelLoc, GLuint colorLoc) {
+  mat4 root = translate(mat4(1.0f), pos);
+
+  // 1. Ceramic / Metal Umbrella Stand (Cylinder)
+  mat4 standBody = root * translate(mat4(1.0f), vec3(0.0f, 0.32f, 0.0f)) *
+                   scale(mat4(1.0f), vec3(0.20f, 0.64f, 0.20f));
+  drawCylinder(standBody, vec3(0.22f, 0.24f, 0.28f), modelLoc, colorLoc);
+
+  // Brass upper rim
+  mat4 standRim = root * translate(mat4(1.0f), vec3(0.0f, 0.64f, 0.0f)) *
+                  scale(mat4(1.0f), vec3(0.21f, 0.03f, 0.21f));
+  drawCylinder(standRim, vec3(0.75f, 0.65f, 0.35f), modelLoc, colorLoc);
+
+  // Weighted base
+  mat4 standBase = root * translate(mat4(1.0f), vec3(0.0f, 0.02f, 0.0f)) *
+                   scale(mat4(1.0f), vec3(0.22f, 0.04f, 0.22f));
+  drawCylinder(standBase, vec3(0.16f, 0.16f, 0.18f), modelLoc, colorLoc);
+
+  // 2. Umbrella resting inside stand, leaning slightly at ~9 degrees
+  mat4 umb = root * translate(mat4(1.0f), vec3(0.02f, 0.08f, 0.02f));
+  umb = rotate(umb, radians(9.0f), vec3(0.7f, 0.0f, 0.7f));
+
+  // Pointed metal tip / ferrule at bottom
+  mat4 ferrule = umb * translate(mat4(1.0f), vec3(0.0f, 0.06f, 0.0f)) *
+                 scale(mat4(1.0f), vec3(0.016f, 0.12f, 0.016f));
+  drawCylinder(ferrule, vec3(0.75f, 0.75f, 0.78f), modelLoc, colorLoc);
+
+  // Folded Fabric Canopy (Deep navy blue canopy tapering upward)
+  vec3 canopyCol = vec3(0.10f, 0.16f, 0.32f); // Deep midnight navy
+  mat4 canopyLow = umb * translate(mat4(1.0f), vec3(0.0f, 0.32f, 0.0f)) *
+                   scale(mat4(1.0f), vec3(0.065f, 0.40f, 0.065f));
+  drawCylinder(canopyLow, canopyCol, modelLoc, colorLoc);
+
+  mat4 canopyMid = umb * translate(mat4(1.0f), vec3(0.0f, 0.62f, 0.0f)) *
+                   scale(mat4(1.0f), vec3(0.085f, 0.30f, 0.085f));
+  drawCylinder(canopyMid, canopyCol * 0.95f, modelLoc, colorLoc);
+
+  // Tie strap band around folded fabric
+  mat4 strap = umb * translate(mat4(1.0f), vec3(0.0f, 0.50f, 0.0f)) *
+               scale(mat4(1.0f), vec3(0.088f, 0.025f, 0.088f));
+  drawCylinder(strap, vec3(0.80f, 0.70f, 0.30f), modelLoc, colorLoc);
+
+  // Central metal shaft extending up
+  mat4 shaft = umb * translate(mat4(1.0f), vec3(0.0f, 0.88f, 0.0f)) *
+               scale(mat4(1.0f), vec3(0.018f, 0.30f, 0.018f));
+  drawCylinder(shaft, vec3(0.80f, 0.80f, 0.82f), modelLoc, colorLoc);
+
+  // Top wooden runner ring
+  mat4 runner = umb * translate(mat4(1.0f), vec3(0.0f, 0.77f, 0.0f)) *
+                scale(mat4(1.0f), vec3(0.035f, 0.03f, 0.035f));
+  drawCylinder(runner, vec3(0.35f, 0.20f, 0.10f), modelLoc, colorLoc);
+
+  // J-shaped curved handle at the top:
+  // Vertical stem of handle
+  mat4 hStem = umb * translate(mat4(1.0f), vec3(0.0f, 1.05f, 0.0f)) *
+               scale(mat4(1.0f), vec3(0.024f, 0.08f, 0.024f));
+  drawCylinder(hStem, vec3(0.32f, 0.18f, 0.08f), modelLoc, colorLoc);
+
+  // Top curve / arch
+  mat4 hArch = umb * translate(mat4(1.0f), vec3(0.035f, 1.10f, 0.0f)) *
+               scale(mat4(1.0f), vec3(0.065f, 0.024f, 0.024f));
+  drawCube(hArch, vec3(0.32f, 0.18f, 0.08f), modelLoc, colorLoc);
+
+  // Descending hook curve
+  mat4 hHook = umb * translate(mat4(1.0f), vec3(0.07f, 1.07f, 0.0f)) *
+               scale(mat4(1.0f), vec3(0.024f, 0.06f, 0.024f));
+  drawCylinder(hHook, vec3(0.32f, 0.18f, 0.08f), modelLoc, colorLoc);
+
+  // Polished brass end tip of handle
+  mat4 hCap = umb * translate(mat4(1.0f), vec3(0.07f, 1.035f, 0.0f)) *
+              scale(mat4(1.0f), vec3(0.026f, 0.015f, 0.026f));
+  drawCylinder(hCap, vec3(0.85f, 0.75f, 0.35f), modelLoc, colorLoc);
 }

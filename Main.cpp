@@ -41,6 +41,16 @@ bool balconyDoorOpen = false;
 float balconyDoorAngle = 0.0f;
 bool oKeyPressedLast = false;
 
+// Main entrance door state & animation ("ROOM 304" Door)
+bool mainDoorOpen = false;
+float mainDoorAngle = 0.0f;
+bool mKeyPressedLast = false;
+
+// Shading Mode: false = Phong Shading (Per-pixel), true = Gouraud Shading (Per-vertex)
+bool useGouraud = false;
+bool gKeyPressedLast = false;
+bool pKeyPressedLast = false;
+
 // Dynamic Fan Animation Angles
 float ceilingFanAngle = 0.0f;
 float tableFanBladeAngle = 0.0f;
@@ -60,12 +70,27 @@ bool key4PressedLast = false;
 // Input processing
 void processInput(GLFWwindow *window) {
   float cameraSpeed = 4.0f * deltaTime;
+
+  // Level walking direction (ignores pitch so looking up/down doesn't slow down horizontal walking)
+  vec3 walkFront = vec3(cameraFront.x, 0.0f, cameraFront.z);
+  if (glm::length(walkFront) > 0.001f)
+    walkFront = normalize(walkFront);
+  else
+    walkFront = vec3(0.0f, 0.0f, -1.0f);
+
+  vec3 cameraRight = normalize(cross(walkFront, cameraUp));
   vec3 nextPos = cameraPos;
 
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    nextPos += cameraSpeed * cameraFront;
+    nextPos += cameraSpeed * walkFront;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    nextPos -= cameraSpeed * cameraFront;
+    nextPos -= cameraSpeed * walkFront;
+
+  // Q and E for strafing left and right in first-person walkthrough
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    nextPos -= cameraSpeed * cameraRight;
+  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    nextPos += cameraSpeed * cameraRight;
 
   // Toggle balcony door with 'O' key
   if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
@@ -79,6 +104,42 @@ void processInput(GLFWwindow *window) {
     }
   } else {
     oKeyPressedLast = false;
+  }
+
+  // Toggle Main Entrance Door with 'M' key
+  if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+    if (!mKeyPressedLast) {
+      mainDoorOpen = !mainDoorOpen;
+      mKeyPressedLast = true;
+      cout << "[MAIN ENTRANCE DOOR - ROOM 304] "
+           << (mainDoorOpen ? "Door OPENED (Swung inward on hinges)."
+                            : "Door CLOSED.")
+           << endl;
+    }
+  } else {
+    mKeyPressedLast = false;
+  }
+
+  // Switch to GOURAUD Shading with 'G' key
+  if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+    if (!gKeyPressedLast) {
+      useGouraud = true;
+      gKeyPressedLast = true;
+      cout << "[SHADING MODE] >>> Switched to GOURAUD SHADING (Per-Vertex Illumination Model) <<<" << endl;
+    }
+  } else {
+    gKeyPressedLast = false;
+  }
+
+  // Switch to PHONG Shading with 'P' key
+  if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+    if (!pKeyPressedLast) {
+      useGouraud = false;
+      pKeyPressedLast = true;
+      cout << "[SHADING MODE] >>> Switched to PHONG SHADING (Per-Pixel Illumination Model) <<<" << endl;
+    }
+  } else {
+    pKeyPressedLast = false;
   }
 
   // Toggle Room Light 1 with key '1' (Back Wall)
@@ -125,31 +186,51 @@ void processInput(GLFWwindow *window) {
     key4PressedLast = false;
   }
 
-  // Camera boundaries & balcony access:
-  // Balcony doorway is located on front wall (z = 9.0f) at x in [-5.8f, -4.2f].
-  // Balcony terrace area spans x in [-7.2f, -2.8f], z in [8.5f, 13.0f].
+  // Camera boundaries & multi-zone navigation:
+  // 1. Balcony Doorway: front wall (z = 9.0f) at x in [-5.8f, -4.2f]
+  // 2. Main Corridor Doorway: back wall (z = -9.0f) at x in [4.2f, 5.8f]
   bool inBalconyDoorway = (nextPos.x >= -5.8f && nextPos.x <= -4.2f);
+  bool inMainDoorway = (nextPos.x >= 4.15f && nextPos.x <= 5.85f);
+
   bool currentlyOnBalcony = (cameraPos.z > 8.5f);
+  bool currentlyInCorridor = (cameraPos.z < -8.5f);
 
   if (currentlyOnBalcony) {
-    // Currently out on the balcony
+    // Zone 1: Balcony Terrace
     if (nextPos.z > 8.5f) {
       if (nextPos.z <= 13.0f) cameraPos.z = nextPos.z;
       if (nextPos.x >= -7.2f && nextPos.x <= -2.8f) cameraPos.x = nextPos.x;
     } else {
-      // Stepping back into the bedroom through the balcony door
+      // Stepping back into Room 304 through open balcony door
       if (balconyDoorOpen && inBalconyDoorway) {
         cameraPos.z = nextPos.z;
         cameraPos.x = nextPos.x;
       }
     }
+  } else if (currentlyInCorridor) {
+    // Zone 2: University Dormitory Hallway Corridor
+    if (nextPos.z < -8.5f) {
+      if (nextPos.z >= -13.5f) cameraPos.z = nextPos.z;
+      if (nextPos.x >= -9.8f && nextPos.x <= 13.8f) cameraPos.x = nextPos.x;
+    } else {
+      // Stepping back into Room 304 through open main entrance door
+      if (mainDoorOpen && inMainDoorway) {
+        cameraPos.z = nextPos.z;
+        cameraPos.x = nextPos.x;
+      }
+    }
   } else {
-    // Currently inside the bedroom
+    // Zone 3: Inside Room 304
     if (nextPos.z <= 8.5f && nextPos.z >= -8.5f) {
       cameraPos.z = nextPos.z;
     } else if (nextPos.z > 8.5f) {
-      // Stepping through the open door out onto the balcony
+      // Stepping through open door out onto balcony
       if (balconyDoorOpen && inBalconyDoorway) {
+        cameraPos.z = nextPos.z;
+      }
+    } else if (nextPos.z < -8.5f) {
+      // Stepping through open door out into hallway corridor
+      if (mainDoorOpen && inMainDoorway) {
         cameraPos.z = nextPos.z;
       }
     }
@@ -159,11 +240,17 @@ void processInput(GLFWwindow *window) {
     }
   }
 
+  // Responsive and fluid 60.0 deg/sec rotation
   float turnSpeed = 60.0f * deltaTime;
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     cameraYaw -= turnSpeed;
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     cameraYaw += turnSpeed;
+  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    cameraPitch = glm::clamp(cameraPitch + turnSpeed, -85.0f, 85.0f);
+  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    cameraPitch = glm::clamp(cameraPitch - turnSpeed, -85.0f, 85.0f);
 
   vec3 direction;
   direction.x = cos(radians(cameraYaw)) * cos(radians(cameraPitch));
@@ -220,6 +307,7 @@ int main() {
   GLuint shininessLoc = glGetUniformLocation(shaderProgram.ID, "shininess");
   GLuint specStrengthLoc = glGetUniformLocation(shaderProgram.ID, "specularStrength");
   GLuint isEmissiveLoc = glGetUniformLocation(shaderProgram.ID, "isEmissive");
+  GLuint useGouraudLoc = glGetUniformLocation(shaderProgram.ID, "useGouraud");
   setEmissiveUniformLoc(isEmissiveLoc);
 
   // Directional Light Uniforms (Outdoor Sunlight)
@@ -228,10 +316,10 @@ int main() {
   GLuint dirLightDiffLoc = glGetUniformLocation(shaderProgram.ID, "dirLight.diffuse");
   GLuint dirLightSpecLoc = glGetUniformLocation(shaderProgram.ID, "dirLight.specular");
 
-  // Point Light Uniforms (4 Indoor Fluorescent Lights + 1 Outdoor Balcony Lantern)
-  GLuint pLightPosLoc[5], pLightAmbLoc[5], pLightDiffLoc[5], pLightSpecLoc[5];
-  GLuint pLightConstLoc[5], pLightLinLoc[5], pLightQuadLoc[5];
-  for (int i = 0; i < 5; i++) {
+  // Point Light Uniforms (4 Indoor Fluorescent Lights + 1 Balcony Lantern + 1 Corridor Light)
+  GLuint pLightPosLoc[6], pLightAmbLoc[6], pLightDiffLoc[6], pLightSpecLoc[6];
+  GLuint pLightConstLoc[6], pLightLinLoc[6], pLightQuadLoc[6];
+  for (int i = 0; i < 6; i++) {
     string base = "pointLights[" + to_string(i) + "].";
     pLightPosLoc[i] = glGetUniformLocation(shaderProgram.ID, (base + "position").c_str());
     pLightAmbLoc[i] = glGetUniformLocation(shaderProgram.ID, (base + "ambient").c_str());
@@ -243,26 +331,39 @@ int main() {
   }
 
   cout << "============================================================" << endl;
-  cout << " 3D Room 304 Walkthrough Initialized (Phong Lighting Active)" << endl;
-  cout << " Controls: W/S = Walk forward/backward, A/D = Turn camera" << endl;
-  cout << " Press [O] = Open / Close the Balcony Door" << endl;
-  cout << " Press [1] = Toggle Light 1 (Back Wall - ON by default)" << endl;
-  cout << " Press [2] = Toggle Light 2 (Front Wall)" << endl;
-  cout << " Press [3] = Toggle Light 3 (Left Wall)" << endl;
-  cout << " Press [4] = Toggle Light 4 (Right Wall)" << endl;
-  cout << " Look at the switch board beside Door 2 for physical switches!" << endl;
+  cout << "  3D Virtual Walkthrough - Uni Hall Room 304 Detailed" << endl;
+  cout << "  Name: Mehedihasan | Roll: 2107086" << endl;
+  cout << "============================================================" << endl;
+  cout << " [SHADING CONTROLS]:" << endl;
+  cout << "   Press [G] = Activate GOURAUD Shading (Per-Vertex Illumination)" << endl;
+  cout << "   Press [P] = Activate PHONG Shading (Per-Pixel Illumination)" << endl;
+  cout << " [DOOR INTERACTIONS]:" << endl;
+  cout << "   Press [O] = Open / Close Balcony Door (Inward swing)" << endl;
+  cout << "   Press [M] = Open / Close Main Entrance Door (Room 304)" << endl;
+  cout << " [LIGHTING & SWITCHBOARD]:" << endl;
+  cout << "   Press [1, 2, 3, 4] = Toggle Tube Lights independently" << endl;
+  cout << "   * Turn off all lights (1,2,3,4) to see glowing PC monitors in darkness!" << endl;
+  cout << " [NAVIGATION]:" << endl;
+  cout << "   W/S = Walk forward / backward" << endl;
+  cout << "   Q/E = Strafe left / right" << endl;
+  cout << "   A/D or Arrow Keys = Turn & look around" << endl;
   cout << "============================================================" << endl;
 
   while (!glfwWindowShouldClose(window)) {
     float currentFrame = (float)glfwGetTime();
-    deltaTime = currentFrame - lastFrame;
+    float rawDelta = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    // Clamp delta time to avoid large jumps during window focus changes or rendering hitches
+    deltaTime = glm::clamp(rawDelta, 0.0001f, 0.0667f);
 
     processInput(window);
 
     // Smooth door opening/closing animation towards target angle
     float targetDoorAngle = balconyDoorOpen ? 95.0f : 0.0f;
     balconyDoorAngle += (targetDoorAngle - balconyDoorAngle) * 5.0f * deltaTime;
+
+    float targetMainDoorAngle = mainDoorOpen ? 95.0f : 0.0f;
+    mainDoorAngle += (targetMainDoorAngle - mainDoorAngle) * 5.0f * deltaTime;
 
     // Smooth motion on ceiling fan
     ceilingFanAngle = fmod(ceilingFanAngle + 340.0f * deltaTime, 360.0f);
@@ -284,10 +385,11 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj));
 
-    // Update Camera position for specular Phong shading
+    // Update Camera position for specular Phong/Gouraud shading
     glUniform3f(viewPosLoc, cameraPos.x, cameraPos.y, cameraPos.z);
     glUniform1f(shininessLoc, 32.0f);
     glUniform1f(specStrengthLoc, 0.35f);
+    glUniform1i(useGouraudLoc, useGouraud ? 1 : 0);
     setEmissive(false);
 
     // Directional Sunlight (Sun high in sky, shining downward at an angle)
@@ -332,8 +434,17 @@ int main() {
     glUniform1f(pLightLinLoc[4], 0.14f);
     glUniform1f(pLightQuadLoc[4], 0.07f);
 
-    // 1. Architectural Room Shell, Doors (including openable Balcony Door), and Balcony Terrace
-    drawRoom(balconyDoorAngle, modelLoc, colorLoc);
+    // Point Light 5: Hallway Corridor Ceiling Light (Warm fluorescent tube outside Room 304)
+    glUniform3f(pLightPosLoc[5], 3.5f, 3.1f, -11.5f);
+    glUniform3f(pLightAmbLoc[5], 0.06f, 0.06f, 0.05f);
+    glUniform3f(pLightDiffLoc[5], 0.75f, 0.75f, 0.70f);
+    glUniform3f(pLightSpecLoc[5], 0.30f, 0.30f, 0.30f);
+    glUniform1f(pLightConstLoc[5], 1.0f);
+    glUniform1f(pLightLinLoc[5], 0.07f);
+    glUniform1f(pLightQuadLoc[5], 0.015f);
+
+    // 1. Architectural Room Shell, Doors (including openable Balcony & Main Doors), and Balcony Terrace
+    drawRoom(balconyDoorAngle, mainDoorAngle, modelLoc, colorLoc);
 
     // 2. 4 Enhanced Beds with Posts, Rails, Recessed Mattress, Headboard &
     // Footboard
@@ -365,9 +476,9 @@ int main() {
     }
 
     // 6. Refined Detailed Almirahs (Metal Almirah & Wooden Wardrobe)
-    drawAlmirah(vec3(-7.2f, 0.0f, -7.5f), false, modelLoc,
+    drawAlmirah(vec3(-7.16f, 0.0f, -8.45f), false, modelLoc,
                 colorLoc); // Metal Almirah
-    drawAlmirah(vec3(7.2f, 0.0f, -7.5f), true, modelLoc,
+    drawAlmirah(vec3(7.16f, 0.0f, -8.45f), true, modelLoc,
                 colorLoc); // Wooden Wardrobe
 
     // 7. 2 Tea Tables
@@ -450,6 +561,15 @@ int main() {
                   modelLoc, colorLoc);
     drawTableware(vec3(teaTablePos[1].x, -1.725f, teaTablePos[1].z), true,
                   modelLoc, colorLoc);
+
+    // 15. 4 Cloth Hangers on Walls near the beds (with varied hanging clothes)
+    drawClothHanger(vec3(-7.90f, 0.40f, -5.0f), 90.0f, modelLoc, colorLoc, 0); // Left wall, Bed 1 (Royal Blue shirt)
+    drawClothHanger(vec3(-7.90f, 0.40f, 2.0f), 90.0f, modelLoc, colorLoc, 1);  // Left wall, Bed 2 (Crimson shirt)
+    drawClothHanger(vec3(7.90f, 0.40f, -5.0f), -90.0f, modelLoc, colorLoc, 2); // Right wall, Bed 3 (Teal polo)
+    drawClothHanger(vec3(7.90f, 0.40f, 2.0f), -90.0f, modelLoc, colorLoc, 3);  // Right wall, Bed 4 (Cream shirt)
+
+    // 16. Umbrella & Stand beside Main Corridor Door (Room 304)
+    drawUmbrella(vec3(6.30f, -2.49f, -8.30f), modelLoc, colorLoc);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

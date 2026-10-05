@@ -29,4 +29,11 @@ void drawTableware(const glm::vec3 &pos, bool isVariant, GLuint modelLoc,
 void drawTableFan(const glm::vec3 &pos, float baseRotationY, float oscillateAngle,
                   float bladeAngle, GLuint modelLoc, GLuint colorLoc);
 
+// 6. Wall Cloth Hanger: horizontal mounting plate, hanging hook pegs, coat hanger frame, and draped shirt/cloth
+void drawClothHanger(const glm::vec3 &pos, float rotationY, GLuint modelLoc,
+                     GLuint colorLoc, int clothVariant = 0);
+
+// 7. Umbrella & Stand: cylindrical ceramic stand, standing umbrella with shaft, J-curved handle, tapered folded canopy and ferrule
+void drawUmbrella(const glm::vec3 &pos, GLuint modelLoc, GLuint colorLoc);
+
 #endif // PROPS_H

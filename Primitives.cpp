@@ -30,12 +30,17 @@ void setEmissive(bool emissive) {
   }
 }
 
-// Draw helper: sets model & color uniforms, binds VAO, and draws elements
+// Draw helper: sets model & color uniforms, caches bound VAO, and draws elements
+static GLuint g_boundVAO = 0;
+
 void drawMesh(GLuint vao, GLsizei count, const mat4 &model,
               const vec3 &color, GLuint modelLoc, GLuint colorLoc) {
   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
   glUniform3f(colorLoc, color.r, color.g, color.b);
-  glBindVertexArray(vao);
+  if (g_boundVAO != vao) {
+    glBindVertexArray(vao);
+    g_boundVAO = vao;
+  }
   glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, 0);
 }
 
@@ -324,11 +329,12 @@ static void initCylinderMesh(int sectors = 32) {
 
 void initPrimitives() {
   initCubeMesh();
-  initSphereMesh(24, 32);
-  initCylinderMesh(32);
+  initSphereMesh(14, 18);
+  initCylinderMesh(18);
 }
 
 void cleanupPrimitives() {
+  g_boundVAO = 0;
   if (cubeVAO) {
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteBuffers(1, &cubeVBO);
